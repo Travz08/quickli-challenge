@@ -8,13 +8,16 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
+import useSWR from 'swr'
 
 export default function Calculator() {
-const [values, setValues] = useState({
-    startDate: null,
-    endDate: null,
-    grossIncome: 0,
-});
+    const fetcher = url => fetch(url).then(r => r.json());
+    const {data, error} = useSWR('/api/calculate', fetcher);
+    const [values, setValues] = useState({
+        startDate: null,
+        endDate: null,
+        grossIncome: 0,
+    });
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -23,7 +26,6 @@ const [values, setValues] = useState({
                 sx={{
                     width: 200,
                     display: 'flex',
-
                     flexDirection: 'column',
                 }}
             >
@@ -62,6 +64,7 @@ const [values, setValues] = useState({
                 sx={{
                     display: 'flex',
                     flexDirection: 'column',
+                    marginRight: '15px',
                 }}
                 noValidate
                 autoComplete="off"
@@ -116,6 +119,26 @@ const [values, setValues] = useState({
                     <Button variant="contained">Calculate</Button>
                 </Box>
             </Box>
+            {(data && !error) && (
+                <Box
+                    sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    paddingLeft: '15px',
+                    borderLeft: '1px solid rgba(0, 0, 0, .125)',
+                }}>
+                    <Box>
+                        <Typography variant="body1" sx={{fontWeight: 'bold'}}>
+                            Annualized payslip YTD figure
+                        </Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="body2">
+                            ${data?.result}
+                        </Typography>
+                    </Box>
+                </Box>
+            )}
         </Box>
     </LocalizationProvider>
   );
