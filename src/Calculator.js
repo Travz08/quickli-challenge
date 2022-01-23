@@ -8,24 +8,25 @@ import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import InputAdornment from '@mui/material/InputAdornment';
-import useSWR from 'swr'
+import useSWR, { mutate } from 'swr'
 
 export default function Calculator() {
     const [values, setValues] = useState({
         startDate: null,
         endDate: null,
-        grossIncome: 0,
+        grossIncome: '',
     });
     const [shouldCalculate, setShouldCalculate] = useState(false)
     const handleOnClick = () => {
         setShouldCalculate(true)
+        // mutate('/api/calculate')
     }
 
-    const fetcher = url => {
-        // setShouldCalculate(false)
-        return fetch(url).then(r => r.json())
-    };
-    const {data, error} = useSWR(shouldCalculate ? '/api/calculate' : null, fetcher);
+    const fetcher = (...args) => fetch(...args).then(r => r.json())
+    const {data, error} = useSWR(shouldCalculate ? ['/api/calculate', {
+        method: "POST",
+        body: JSON.stringify(values)
+    }] : null, fetcher);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -45,7 +46,7 @@ export default function Calculator() {
                         marginBottom: '15px',
                     }}
                 >
-                    <Typography variant='body2'>Date applicant started job</Typography>
+                    <Typography variant='body2'>Start of financial year date</Typography>
                 </Box>
                 <Box 
                     sx={{
@@ -55,7 +56,7 @@ export default function Calculator() {
                         marginBottom: '15px',
                     }}
                 >
-                    <Typography variant='body2'>End date of most recent payslip</Typography>
+                    <Typography variant='body2'>Latest pay period end date</Typography>
                 </Box>
                 <Box 
                     sx={{
@@ -79,7 +80,6 @@ export default function Calculator() {
             >
                 <Box sx={{ marginBottom: '15px' }}>
                     <DatePicker
-                        label="Start Date"
                         value={values.startDate}
                         onChange={(newValue) => {
                             setValues({
@@ -93,7 +93,6 @@ export default function Calculator() {
                 </Box>
                 <Box sx={{ marginBottom: '15px' }}>
                     <DatePicker
-                        label="End Date"
                         value={values.endDate}
                         onChange={(newValue) => {
                             setValues({
@@ -108,7 +107,6 @@ export default function Calculator() {
                 <Box sx={{ marginBottom: '15px' }}>
                     <TextField 
                         id="gross" 
-                        label="YTD Gross Income"
                         value={values.grossIncome}
                         onChange={(event) => {
                             setValues({
@@ -119,15 +117,22 @@ export default function Calculator() {
                         variant="outlined" 
                         InputProps={{
                             startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                            inputMode: 'numeric', 
+                            pattern: '[0-9]*',
                         }} 
                         fullWidth
                     />
                 </Box>
                 <Box>
-                    <Button onClick={() => handleOnClick()} variant="contained">Calculate</Button>
+                    <Button 
+                        onClick={() => handleOnClick()}
+                        variant="contained"
+                    >
+                        Calculate
+                    </Button>
                 </Box>
             </Box>
-            {(data && !error) && (
+            {(data?.result > 0 && !error) && (
                 <Box
                     sx={{
                     display: 'flex',
