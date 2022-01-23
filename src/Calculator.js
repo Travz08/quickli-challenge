@@ -11,13 +11,21 @@ import InputAdornment from '@mui/material/InputAdornment';
 import useSWR from 'swr'
 
 export default function Calculator() {
-    const fetcher = url => fetch(url).then(r => r.json());
-    const {data, error} = useSWR('/api/calculate', fetcher);
     const [values, setValues] = useState({
         startDate: null,
         endDate: null,
         grossIncome: 0,
     });
+    const [shouldCalculate, setShouldCalculate] = useState(false)
+    const handleOnClick = () => {
+        setShouldCalculate(true)
+    }
+
+    const fetcher = url => {
+        // setShouldCalculate(false)
+        return fetch(url).then(r => r.json())
+    };
+    const {data, error} = useSWR(shouldCalculate ? '/api/calculate' : null, fetcher);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -116,7 +124,7 @@ export default function Calculator() {
                     />
                 </Box>
                 <Box>
-                    <Button variant="contained">Calculate</Button>
+                    <Button onClick={() => handleOnClick()} variant="contained">Calculate</Button>
                 </Box>
             </Box>
             {(data && !error) && (
